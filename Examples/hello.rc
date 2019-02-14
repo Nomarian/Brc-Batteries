@@ -1,0 +1,3 @@
+#!/usr/bin/rc
+
+echo 'Hello World!'
