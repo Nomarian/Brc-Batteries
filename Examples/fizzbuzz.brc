@@ -1,0 +1,21 @@
+#!/usr/bin/env brc
+
+~ $#* 0 && *=100
+
+fn calc { dc -e $*^' 3 % p' }
+fn calc { expr	$* '%' 3 }
+
+fn main {
+ ~ `{ calc $1 } 0	&& { *=(1 $*) ; echo -n fizz }
+ ~ $*($#*) *^(5 0)	&& { *=(1 $*) ; echo -n buzz }
+
+  ~ $#* 1 && *=$*($#*) || *=()
+  echo $*
+}
+
+while ( ! ~ $#* $1) {
+ main $#*
+ *=($* 1)
+}
+
+exit 0
