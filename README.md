@@ -1,2 +1,2 @@
 # rc-modules
-Modules for Byron rakitzis RC shell
+Byron rakitzis RC shell
