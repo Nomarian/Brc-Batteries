@@ -1,0 +1,38 @@
+#!/bin/brc
+
+flagfmt=`` (,) { echo $flagfmt }
+
+fn vshift	{ lshift=$*; *=$$1; shift $lshift(2); $lshift(1)=$* }
+
+fn parseflags { FLAGS=`{ echo $flagfmt(1) } } #( Eval, very important )#
+
+while(!~ $#* 0 && !~ $#flagfmt 0){ shift=1
+  if (~ $1 -^*) {	#( Now we Match $1 with $flagfmt )#
+	for(null in $flagfmt){ #( We repeat, till we walk through all of $flagfmt's elements )#
+		parseflags	;	flag=flag^$FLAGS(1)	
+		if(~ $1 -^$FLAGS(1)){ shift=0
+			shift	;	vshift flagfmt	;	vshift FLAGS
+			if (~ $#FLAGS 0 ) { $flag=1 } else { 
+				for(count in $FLAGS){ $flag=($$flag $1) ; shift } }		#( magic )#
+			break			#( break before flagfmt parse )#
+		}
+		flagfmt=($flagfmt $flagfmt(1)) ; vshift flagfmt	#( This is how you check all the flags )#
+  }	}
+	~ $shift 1 && args=($args $1) #( didnt find anything, so it must be an arg )#
+	shift $shift
+}
+
+args=($* $args)		;	*=($* $args)
+
+#( NOTES )#
+  # * unexportabled
+	# so we save $* in args, be sure to *=$args when you call this module, (unless its called with . -i)
+#( Bugs )#
+  # Doesnt Handle errors
+	#( This is due to the fact that status is also non-exportable
+		# So it can either be STATUS=1 in there, or break
+		# Either way, you can probably see the cannot shift message and shit on your pants
+		# thats a fair warning, good enough eh? (NOT)#
+  #( sometimes, you may want a flag that can be both 1 or an arg just for being mentioned
+	# Alas, that requires guessing, so you do it )#
+# IT WORKS, DONT FUCKING MESS WITH IT, GO AND TOUCH YOUR BALLS

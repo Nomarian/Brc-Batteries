@@ -1,0 +1,65 @@
+#!/bin/brc
+
+switch( $#flagfmt ){
+	case 0 ; STATUS=1 ; echo '$flagfmt not set' ; exit 1
+	case 1 ; flagfmt=`` (,) { echo -n $flagfmt }
+  }
+
+*=$* {
+  for (* in $flagfmt){
+	*=`{ echo $* }
+	FLAGS=($FLAGS $1)
+} }
+
+args=$args	shift=$shift	SAVEFLAG=$SAVEFLAG	{
+while(!~ $#* 0){
+	args=$*		#( because you cant specify $(jot 5) )#
+	shift=()	#( we always shift when finished )#
+
+  switch ( $1 ) {	#( Switches are handy, especially if you add... commands!? :O )#
+	case '--'	#( not a flag, its an arg )#
+		ARGS=($ARGS $2)
+		shift=2
+
+	case -^$FLAGS
+		flagfmt=$flagfmt {
+		  for(flagfmt in $flagfmt){ #( Find which flag )#
+			flagfmt=`{ echo -n $flagfmt }
+			SAVEFLAG=flag^$flagfmt(1)
+			if (~ $1 -^$flagfmt(1)) {
+				if(~ $#flagfmt 1){
+					$SAVEFLAG=($$SAVEFLAG 1)
+				  } else { 
+					shift=$#flagfmt
+					$SAVEFLAG=($$SAVEFLAG $args(`{jot - 2 $#flagfmt}))
+				} 
+			break
+		}	}	} 
+
+	case *
+		ARGS=($ARGS $1) #( no flag, its arg )#
+
+  }
+
+	shift $shift || { STATUS=1 ; break }
+
+} }
+
+*=$ARGS
+					#vshift flagfmt (if you dont have jot
+					#$SAVEFLAG=($$SAVEFLAG $args($#flagfmt}))
+					#~ $$#SAVEFLAG $#flagfmt && break
+
+#( NOTES )#
+  # * unexportabled
+	# so we save $* in args, be sure to *=$args when you call this module, (unless its called with . -i)
+#( Bugs )#
+  # Doesnt Handle errors
+	#( This is due to the fact that status is also non-exportable
+		# So it can either be STATUS=1 in there, or break
+		# Either way, you can probably see the cannot shift message and shit on your pants
+		# thats a fair warning, good enough eh? (NOT)#
+#fn vshift	{ lshift=$*; *=$$1; shift $lshift(2); $lshift(1)=$* }
+# could probably use $savehere at the end of flag spec... just need to vchop
+# be able to select which var to save the flag to 
+# support --

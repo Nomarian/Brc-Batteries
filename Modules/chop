@@ -1,0 +1,17 @@
+#!/bin/brc
+
+$1 = $*
+for 
+$$1
+
+
+
+for (* in $$1) {
+	_vchop_
+($*)
+
+fn vchop {
+ for ( * in $$*) {
+	
+ }
+}

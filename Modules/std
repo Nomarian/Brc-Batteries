@@ -1,0 +1,111 @@
+
+#-------	BLOCK
+#{ COMMAND }#
+#( COMMENT )#
+# -- comment
+#-------	BLOCK
+# you can always shift number, but the list is always needed, so n goes first, thats the standard
+# its the opposite, we want to keep n, so whats important goes last
+
+#-------	#( functions )#
+fn ifs { #{ vfs var ifs } ( apply IFS to var, )#
+	difs=$ifs ; v=$1 ; shift ; ifs=$* ; $v=`{ echo $$v } ; ifs=$difs }
+
+fn lshift vshift { #{ var n }#
+	lshift=$*; *=$$1; shift $lshift(2); $lshift(1)=$* }
+	
+fn Vflush	{ for ($0 in $*){ $$0=() } ; $0=() }
+
+#-------	#{ var 'string' }  -- separator can be an arbitrary string.
+fn lflat { 
+	lflat=$*; *=$$1
+  while () {
+	echo -n $1; shift
+		~ $#* 0 && break
+	echo -n $lflat(2) } }
+
+fn vflat { #( Overwrites a variable, changing its IFS into a string of your choosing )#
+ Vflat=$* ; *=$$1 ; $Vflat(1)=$1 ; shift
+  for ($0 in $*) {
+	$Vflat(1)=$$Vflat(1)^$Vflat(2)^$$0 }
+		Vflush Vflat $0 }
+
+#fn vflat { lflat=$*; *=$$1 ; echo -n $1; shift ; while (!~ $#* 0) { echo -n $lflat(2)^$1 ; shift } }
+
+fn OFS {
+	for ($0 in $$1) {
+		~ $#* 1 && echo -n $1 || *=$2
+		echo -n $$0 } }                                                   
+
+fn Drop { #( var items )#
+		# Excludes items from list
+	*=$* {	shift ; EXCLUDE=$*	}
+
+	*=$* {
+	 for (* in $$1){
+		~ $$#0 $EXCLUDE || $0=($$0 $*)
+	}  }
+
+	$1=$$0
+}
+
+#-------
+fn count	{ $1=($$1 1) }
+fn read		{ if (!~ $*) { $1=`{ awk '{print ; exit }' } } else { awk '{print ; exit}' } }
+fn Vset		{ for($0 in $*){ RCTMPVARS=($0 $RCTMPVARS) } ; $0=() }
+fn Vunset	{ Vflush $RCTMPVARS } #( Saves args as a var called TMPVAR, unset removes all this vars )#
+fn fall		{ $0=$1 ; shift ; *=($* $0) }	#{ list }#
+fn vfall	{ var=$1 ; vfall=$$1 ; *=$$1 ; shift ; $var=($* $vfall(1)) }	#{ var }# (1) -> bottom
+#------- Match - gets matching elements from a list
+fn matcher { #{ var string, string list}#
+  switch($#*){
+	case 0 1;	echo 'errm... its { var string or string list }' ; return 1
+	case 2	;	args=$* ; *=$$1 ; $args(1)=()
+		for ($0 in $*)	{ ~ $$0 *^$args(2)^* && $args(1)=($$0 $$args(1)) }
+	case *	;	matchstring=$1 ; shift ; for ($0 in $*) { ~ $$0 *^$matchstring^* && echo $$0
+} } }
+
+fn vmatch lmatch    { #{ var string }#
+	args=$* ; *=$$1 ; $args(1)=()
+	for ($0 in $*)	{ ~ $$0 *^$args(2)^* && $args(1)=($$0 $$args(1)) } }
+fn match	{ #{ string list }#
+	matchstring=$1 ; shift ; for ($0 in $*) { ~ $$0 *^$matchstring^* && echo $$0 } }
+#-------
+fn lslice	{	#( n list )#  -- Extracts n elements from list
+	slicefn=$1 ; shift ; while(!~ $slicefn $#x23) { count x23 ; echo $1 ; shift } ; x23=() }
+fn move		{	#( n list )#		-- a b c -> b c a
+	n=$* ; shift 2 ; n2=$* ; x=`{ slice $n(1) $* } ; shift $n(1) ; echo $x $n(2) $* }
+#------- shift, but store whats shifted
+fn vstore	{	#{ var n } -- 
+	$0=() ; for(v in $$1){ $0=($$0 $v) ; ~ $#$0 $2 && break }
+	$1=$$0 }
+#-------  #( Partial mirror )#
+fn flip		{	#( list n )#	-- swap 
+	n=$* ; shift ; total=$#* ; shift ; n2=$* ; shift $n(1) ; *=($n(2) $*)
+	for (x in $n2){ ~ $#* $total && break ; *=($x $*) } ; echo $* }
+fn vflip	{	#{ var n }
+	VflipArgs=$* ; *=$$1 ; shift $VflipArgs(2)
+	for(V in $$VflipArgs(1)){ $0=($V $$0) ; ~ $#$0 $VflipArgs(2) && break }
+	$VflipArgs(1)=($$0 $*) ; Vflush $0 VflipArgs }
+#-------
+fn invert	{	#( Inverts the stack )# -- MIRROR
+  if (~ $#* 1 ) { $0=() #( $0 is basically stack )#
+	for (* in $$1 $1) {
+		$0=($* $$0) }
+	*=$$0 ; $0=$1 ; shift ; $$0=$* ; $0=()
+  } else {
+  	invertfn=$* ; *=() ; for(v in $invertfn){ *=($v $*) } ; echo $* } }
+#-------
+fn lchop vchop {	#{ var\list n }		-- Chop a variable\list (opposite of shift)#
+	if (~ $#* 2){	invert $1 ; vshift $1 $2 ; invert $1	#( Var )#
+		} else {	*=`{ invert $* } ; shift $1 ; shift ; invert $* } } #( List )#
+#-------
+fn exclude	{	#(	var exclude-list	)#
+	exclude=$exclude tmp=$tmp {
+	*=$*	{	shift ; exclude=$*	}
+		tmp=$$1 ; $1=()
+		for (tmp in $tmp) {
+			if ( ! ~ $tmp $exclude ) {
+				$1=($$1 $tmp) }
+		}		
+}	}
