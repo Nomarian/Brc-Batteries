@@ -1,0 +1,18 @@
+#!/usr/bin/env brc
+# Khwerz@gmail.com
+Bottles=99 ; p='s ' ; nl='
+' ; fn Sub { Bottles=`{ dc -e $Bottles^' 1 - p' }
+	printf '\nTake one down and pass it around, ' }
+ fn V1 { echo -n $Bottles 'bottle'^$p^'of beer'^$t1 }
+ fn V2 { echo -n 'on the wall'^$^t2 }
+	
+while (! ~ $Bottles 0 'no more') {t1=' ' ; t2=', '
+ V1 ; V2 ; t1='.' ; V1 ; Sub
+ if (~ $Bottles 1) { p=' ' }
+ if (~ $Bottles 0) { Bottles='no more' ; p='s ' }
+ t1=' ' ; t2='.'$nl$nl ; V1 ; V2 }
+
+t2=', ' ; V1 | tr -s 'n' 'N' ; V2 ; t1='.'$nl ; V1
+
+echo -n 'Go to the store and buy some more, '
+Bottles=99 ; t1=' ' ; V1 ; t2='!'$nl ; V2
