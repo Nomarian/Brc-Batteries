@@ -7,6 +7,9 @@
 # you can always shift number, but the list is always needed, so n goes first, thats the standard
 # its the opposite, we want to keep n, so whats important goes last
 
+nl='
+'
+
 #-------	#( functions )#
 fn ifs { #{ vfs var ifs } ( apply IFS to var, )#
 	difs=$ifs ; v=$1 ; shift ; ifs=$* ; $v=`{ echo $$v } ; ifs=$difs }
@@ -32,10 +35,16 @@ fn vflat { #( Overwrites a variable, changing its IFS into a string of your choo
 
 #fn vflat { lflat=$*; *=$$1 ; echo -n $1; shift ; while (!~ $#* 0) { echo -n $lflat(2)^$1 ; shift } }
 
-fn OFS {
+fn OFS { #( )#
 	for ($0 in $$1) {
 		~ $#* 1 && echo -n $1 || *=$2
 		echo -n $$0 } }                                                   
+
+fn collapse { #( var )# -- flattens variable
+ ifs=() $1=`{
+  for (* in $$1) { echo -n $* }
+ }
+}
 
 fn Drop { #( var items )#
 		# Excludes items from list
