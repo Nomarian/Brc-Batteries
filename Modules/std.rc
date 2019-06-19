@@ -118,3 +118,6 @@ fn exclude	{	#(	var exclude-list	)#
 				$1=($$1 $tmp) }
 		}		
 }	}
+
+fn ftest { ~ $1^* $1 && return 0 || return 1 }		# built in test -f
+fn dtest { ~ *^$1/ $1^/ && return 0 || return 1 }	# built in test -d
