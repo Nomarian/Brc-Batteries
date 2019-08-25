@@ -7,6 +7,7 @@
 # you can always shift number, but the list is always needed, so n goes first, thats the standard
 # its the opposite, we want to keep n, so whats important goes last
 
+tab='	'
 nl='
 '
 
@@ -104,10 +105,27 @@ fn invert	{	#( Inverts the stack )# -- MIRROR
 	*=$$0 ; $0=$1 ; shift ; $$0=$* ; $0=()
   } else {
   	invertfn=$* ; *=() ; for(v in $invertfn){ *=($v $*) } ; echo $* } }
-#-------
+
 fn lchop vchop {	#{ var\list n }		-- Chop a variable\list (opposite of shift)#
-	if (~ $#* 2){	invert $1 ; vshift $1 $2 ; invert $1	#( Var )#
-		} else {	*=`{ invert $* } ; shift $1 ; shift ; invert $* } } #( List )#
+ ~ $#* 1 && *=($1 1)
+ if (~ $#* 2){
+	invert $1 ; vshift $1 $2 ; invert $1	#( Var )#
+  } else {
+	*=`{ invert $* } ; shift $1 ; shift ; invert $*
+ }
+}
+
+# This is better than vchop because it doesn't do 2 inverts
+#fn chop { # Opposite of shift, echoes to stdout
+# chop=$*; *=$* { *=1 # no math, so we fake 1 so its equal later
+# while(! ~ $#chop $#*){ *=($* $chop($#*)); echo $*($#*) }
+# # fake it by adding everything except the last
+# shift; chop=$*
+# }
+# $
+#}
+
+
 #-------
 fn exclude	{	#(	var exclude-list	)#
 	exclude=$exclude tmp=$tmp {
@@ -118,6 +136,26 @@ fn exclude	{	#(	var exclude-list	)#
 				$1=($$1 $tmp) }
 		}		
 }	}
+fn comment { # nothing!, use a string here
+}
+fn basename { ifs=/ { *=`{echo $^*}; echo -n $$#* } }
 
-fn ftest { ~ $1^* $1 && return 0 || return 1 }		# built in test -f
-fn dtest { ~ *^$1/ $1^/ && return 0 || return 1 }	# built in test -d
+# Simple built-in tests
+fn ftest { ~ $1^* $1 && return 0 || return 1 }	# built in test -f, ONLY FILES NO DIRECTORIES!
+
+#fn dirname {ifs=/ x{*=`{echo $*}; for (* in $*) {echo -n /^$*} } #TODO
+#fn dirtest { ~ $1*/ $1^/ && return 0 || return 1 }	# built in test -d, ONLY DIRECTORIES, NO FULLPATHS
+# fn ftest { if (~ $1 */) {  ~  } else { }} wrapper around ftest and dtest #TODO
+#fn dtest { ~ *^$1/ $1^/ && return 0 || return 1 }	# built in test -d, NO FULLPATHS
+# todo: Fails on fullpath, you can use IFS and then vflat, but may be too much work
+
+fn mktmp { # Returns a temporary file
+ ~ $#USER 0 && {echo 'ERROR: NO $USER FOUND!'> /dev/stderr ;return 1}
+ ~ /tmp* /tmp || {echo 'ERROR: /tmp/ NOT FOUND!'> /dev/stderr ;return 1}
+
+ *=/tmp/$USER.*
+ i=($i /tmp/$USER.$#i) {
+  while( ~ $* $i($#i) ){ i=($i /tmp/$USER.$#i) }
+  echo -n $i($#i)
+ }
+}
