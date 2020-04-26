@@ -1,0 +1,6 @@
+
+
+# basically test -e but hackish
+fn badtest { ~ *$1 $1 && return 0 || return 1 }
+
+
