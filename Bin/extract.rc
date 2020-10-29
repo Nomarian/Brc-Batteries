@@ -1,0 +1,68 @@
+#!/usr/bin/rc
+
+fn help { echo '
+ extract archive [archives] [directory]
+ directory must end in / or not exist
+ if directory doesn''''t exist, it is created.
+ all files will be extracted to directory
+'
+ exit 0
+}
+
+~ $#* 0 && help
+
+fn error { *=$* { shift; echo $* > /dev/stderr }; exit $1 }
+
+fn makedir {
+ mkdir -pv $* || error 1 'ERROR: could not create directory'
+}
+
+fn get_dir { # returning 0 or 1 means make dir
+ ~ $$#* */ && { dir=$$#*; test -e $dir; return $status }
+
+ test -f $$#* && return 0
+ dir=$$#*
+ test -d $$#*
+ return $status
+}
+
+get_dir $* || makedir $$#*
+
+*=$* { # all files should exist
+ for (* in $*) { ~ *$1 $1 || error 1 $1 ' does not exist!' }
+}
+
+# Excludes $1 from $*
+#fn exclude { x=$1 v=$* { shift; *=(); for (v in $v) { ~ $v $x || *=($* $v)} } }
+
+if (~ $#dir 1) {
+ y=$* { *=()
+  for (y in $y){
+   ~ $y $dir && break
+   *=($* $y)
+  }
+ }
+}
+
+files = $* 
+
+fn append { _=$1 {shift; $_=($$_ $*) } }
+
+fn xtract { cmd=()
+ switch($*){
+  case *.zip; cmd=( unzip $* ); ~ $#dir 1 && append cmd -d $dir
+
+  case *.tar.gz *.tar.bz2 *.tgz
+   # This depends on your version of tar
+   # bsd tar does not handle tar.gz
+   cmd=tar; ~ $#dir 1 && append cmd -C $dir; append cmd -xvf $*
+
+# case *.gz; cmd=()
+
+  case *.tar; cmd=tar; ~ $#dir 1 && append cmd -C $dir; append cmd -xvf $*
+
+  case *; error 1 Unsupported format $*
+ }
+}
+
+for (* in $files){ xtract $*; echo $cmd; exec $cmd}
