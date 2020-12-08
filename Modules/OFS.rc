@@ -1,7 +1,10 @@
 
-fn OFS {
-  $0 = $$0 {
-	for ($0 in $$1) {
-		~ $#* 1 && echo -n $1 || *=$2
-		echo -n $$0
-} }	}
+fn ofs { # will flatten $* with $1 as its divider, echoes
+ ofs=$1 { shift;echo -n $1;shift
+  for (* in $*){ echo -n $ofs^$* }
+ }
+}
+
+fn vofs { # will flatten variable $1 with $2 as its divider
+ $1=`{ ofs $2 $$1 }
+}
